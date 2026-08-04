@@ -1,0 +1,12 @@
+{
+  "name": "devmob",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "aisa:chat": "node scripts/aisa-chat.mjs",
+    "aisa:api": "node scripts/aisa-api.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
