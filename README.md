@@ -6,6 +6,10 @@ Protótipo Android de um laboratório visual com uma interface original inspirad
 
 Esta versão é **frontend navegável**. Não lê imagens da galeria nem aplica efeitos reais ainda; ela valida a linguagem nostálgica e o fluxo antes de integrar processamento de imagem.
 
+## Atalho de inspiração
+
+A área de trabalho inclui o atalho **ASCII MAGIC ONLINE**, que abre `https://www.ascii-magic.com/app` no navegador padrão do aparelho. É uma ligação externa para referência e experimentação; o ARQUIVO.EXE não envia imagens para esse serviço, não incorpora seu código e não possui afiliação com o ASCII Magic.
+
 ## Executar / instalar
 
 O workflow **Build Android APK** gera um APK de debug como artefato em cada push para a branch do projeto. Baixe `arquivo-exe-debug-apk` no GitHub Actions e instale `app-debug.apk` no Android.

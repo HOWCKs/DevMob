@@ -1,5 +1,7 @@
 package one.arquivo.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontFamily
@@ -43,6 +46,7 @@ data class Layer(val name: String, val icon: String, val color: Color)
 
 @Composable
 private fun ArquivoApp() {
+    val context = LocalContext.current
     var screen by remember { mutableStateOf(Screen.DESKTOP) }
     var activeLayer by remember { mutableStateOf<Layer?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
@@ -51,7 +55,11 @@ private fun ArquivoApp() {
             when (screen) {
                 Screen.DESKTOP -> Desktop(
                     onNew = { screen = Screen.EDITOR }, onArchive = { screen = Screen.ARCHIVE },
-                    onRecipes = { screen = Screen.RECIPES }, onInfo = { message = "ARQUIVO.EXE v0.1\nProtótipo de interface visual." }
+                    onRecipes = { screen = Screen.RECIPES },
+                    onAsciiMagic = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.ascii-magic.com/app")))
+                    },
+                    onInfo = { message = "ARQUIVO.EXE v0.1\nProtótipo de interface visual." }
                 )
                 Screen.EDITOR -> Editor(
                     activeLayer = activeLayer, onBack = { screen = Screen.DESKTOP },
@@ -69,7 +77,13 @@ private fun ArquivoApp() {
 }
 
 @Composable
-private fun Desktop(onNew: () -> Unit, onArchive: () -> Unit, onRecipes: () -> Unit, onInfo: () -> Unit) {
+private fun Desktop(
+    onNew: () -> Unit,
+    onArchive: () -> Unit,
+    onRecipes: () -> Unit,
+    onAsciiMagic: () -> Unit,
+    onInfo: () -> Unit
+) {
     RetroWindow(title = "ARQUIVO.EXE — Área de Trabalho", footer = "Pronto. Selecione um arquivo para começar.") {
         Text("SISTEMA CRIATIVO PESSOAL", fontSize = 12.sp, letterSpacing = 2.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(14.dp))
@@ -79,6 +93,7 @@ private fun Desktop(onNew: () -> Unit, onArchive: () -> Unit, onRecipes: () -> U
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             DesktopIcon("▣", "NOVO\nPROJETO", onNew)
             DesktopIcon("▤", "ACERVO", onArchive)
+            DesktopIcon("⌘", "ASCII MAGIC\nONLINE", onAsciiMagic)
             DesktopIcon("✦", "RECEITAS", onRecipes)
             DesktopIcon("?", "SOBRE O\nSISTEMA", onInfo)
         }
