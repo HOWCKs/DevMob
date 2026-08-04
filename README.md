@@ -4,7 +4,7 @@ Protótipo Android de um laboratório visual com uma interface original inspirad
 
 ## Estado do protótipo
 
-Esta versão é **frontend navegável**. Não lê imagens da galeria nem aplica efeitos reais ainda; ela valida a linguagem nostálgica e o fluxo antes de integrar processamento de imagem.
+Esta versão é um protótipo navegável com a primeira ferramenta local funcional: **DITHER GAME BOY**. Em **Novo Projeto**, selecione uma imagem do aparelho; abra o **Acervo** e aplique a camada de dither para convertê-la localmente em uma paleta de quatro tons de verde. A imagem não é enviada para servidor. Exportação e demais efeitos continuam em prototipação.
 
 ## Atalho de inspiração
 

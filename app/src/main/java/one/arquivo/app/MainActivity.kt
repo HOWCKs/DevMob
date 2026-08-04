@@ -1,8 +1,12 @@
 package one.arquivo.app
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -19,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -49,12 +56,22 @@ private fun ArquivoApp() {
     val context = LocalContext.current
     var screen by remember { mutableStateOf(Screen.DESKTOP) }
     var activeLayer by remember { mutableStateOf<Layer?>(null) }
+    var sourceBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            context.contentResolver.openInputStream(it)?.use { stream ->
+                sourceBitmap = BitmapFactory.decodeStream(stream)
+                activeLayer = null
+                screen = Screen.EDITOR
+            }
+        }
+    }
     MaterialTheme(colorScheme = lightColorScheme(primary = SystemBlue, surface = ClassicGray)) {
         Surface(color = ClassicGray, modifier = Modifier.fillMaxSize()) {
             when (screen) {
                 Screen.DESKTOP -> Desktop(
-                    onNew = { screen = Screen.EDITOR }, onArchive = { screen = Screen.ARCHIVE },
+                    onNew = { imagePicker.launch("image/*") }, onArchive = { screen = Screen.ARCHIVE },
                     onRecipes = { screen = Screen.RECIPES },
                     onAsciiMagic = {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.ascii-magic.com/app")))
@@ -62,7 +79,7 @@ private fun ArquivoApp() {
                     onInfo = { message = "ARQUIVO.EXE v0.1\nProtótipo de interface visual." }
                 )
                 Screen.EDITOR -> Editor(
-                    activeLayer = activeLayer, onBack = { screen = Screen.DESKTOP },
+                    sourceBitmap = sourceBitmap, activeLayer = activeLayer, onBack = { screen = Screen.DESKTOP },
                     onArchive = { screen = Screen.ARCHIVE }, onRender = { message = "RENDERIZAÇÃO CONCLUÍDA\nProtótipo salvo na memória visual." },
                     onRemove = { activeLayer = null }
                 )
@@ -114,18 +131,30 @@ private fun DesktopIcon(symbol: String, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Editor(activeLayer: Layer?, onBack: () -> Unit, onArchive: () -> Unit, onRender: () -> Unit, onRemove: () -> Unit) {
+private fun Editor(sourceBitmap: Bitmap?, activeLayer: Layer?, onBack: () -> Unit, onArchive: () -> Unit, onRender: () -> Unit, onRemove: () -> Unit) {
+    val renderedBitmap = remember(sourceBitmap, activeLayer) {
+        if (sourceBitmap != null && activeLayer?.name == "Dither Game Boy") DitherEngine.gameBoy(sourceBitmap) else sourceBitmap
+    }
     RetroWindow(title = "Projeto sem título.img", footer = "1080 × 1920 px  |  Camada ${if (activeLayer == null) "00" else "01"}  |  Sem salvar", onClose = onBack) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("Arquivo", "Editar", "Camadas", "Ajuda").forEach { Text(it, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
         }
         Spacer(Modifier.height(10.dp))
         Box(Modifier.fillMaxWidth().weight(1f).retroSunken().background(Color(0xFF182A31)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.size(132.dp).background(if (activeLayer?.color != null) activeLayer.color.copy(alpha = .75f) else Color(0xFF778890)))
-                Spacer(Modifier.height(14.dp))
-                Text(activeLayer?.name ?: "IMAGEM AGUARDANDO CAMADA", color = if (activeLayer == null) ScreenGreen else Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp, textAlign = TextAlign.Center)
-                Text(if (activeLayer == null) "Abra o Acervo para começar." else "camada aplicada com sucesso", color = Color(0xFFB8C6C5), fontSize = 11.sp)
+            if (renderedBitmap != null) {
+                Image(
+                    bitmap = renderedBitmap.asImageBitmap(),
+                    contentDescription = "Prévia do projeto",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(10.dp)
+                )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.size(132.dp).background(if (activeLayer?.color != null) activeLayer.color.copy(alpha = .75f) else Color(0xFF778890)))
+                    Spacer(Modifier.height(14.dp))
+                    Text("IMAGEM AGUARDANDO", color = ScreenGreen, fontFamily = FontFamily.Monospace, fontSize = 12.sp, textAlign = TextAlign.Center)
+                    Text("Use NOVO PROJETO para selecionar uma foto.", color = Color(0xFFB8C6C5), fontSize = 11.sp, textAlign = TextAlign.Center)
+                }
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -146,6 +175,7 @@ private fun Editor(activeLayer: Layer?, onBack: () -> Unit, onArchive: () -> Uni
 @Composable
 private fun Archive(onBack: () -> Unit, onSelect: (Layer) -> Unit) {
     val assets = listOf(
+        "DITHER GAME BOY" to Layer("Dither Game Boy", "░", Color(0xFF8BAC0F)),
         "PELÍCULA 35MM" to Layer("Película 35mm", "▧", Amber),
         "TELA CRT" to Layer("Fósforo CRT", "▦", Color(0xFF58C7A3)),
         "PAPEL XEROX" to Layer("Xerox gasto", "▤", Color(0xFFE6D6A8)),
